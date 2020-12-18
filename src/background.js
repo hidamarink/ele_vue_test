@@ -40,6 +40,7 @@ async function createWindow() {
     // Load the index.html when not in development
     win.loadURL('app://./index.html')
   }
+  //导入监听事件
   require("./main/window")
 }
 
