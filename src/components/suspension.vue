@@ -6,10 +6,9 @@
 </template>
 
 <script>
-
+import _ from "lodash";
 let electron = window.require("electron");
 let pako = require("pako");
-import chalk from "chalk";
 export default {
 
   name: "suspension",
@@ -22,6 +21,7 @@ export default {
       is_connected : false,
       is_detail_sub : false,
       is_trade_sub: false,
+      sub_list : [],
       price:""
     }
   },
@@ -50,6 +50,7 @@ export default {
           electron.ipcRenderer.send('app_exit');
           break;
         case 2:
+          electron.ipcRenderer.send('createSuspensionMenu');
           console.log("鼠标右键点击")
           break;
       }
@@ -65,6 +66,12 @@ export default {
       // console.log(e.screenX - biasX, e.screenY);
       win.setBounds({width:400,height:300,x:e.screenX - biasX, y:e.screenY - biasY})
     }
+
+    //添加监听事件
+    electron.ipcRenderer.on("change_symbol",function (){
+      console.log("====================================================监听到更换币对通知");
+    });
+
   },
   methods: {
     initWebSocket() { //初始化weosocket
@@ -79,8 +86,6 @@ export default {
       this.is_detail_sub = false;
     },
 
-
-
     websocketonopen() { //连接建立之后执行send方法发送数据
       // let actions = {"test":"12345"};
       // this.websocketsend(JSON.stringify(actions));
@@ -93,7 +98,7 @@ export default {
       // const redata = JSON.parse(e.data);
       // console.log(e);
       let str =  await this.gzip2str(e.data);
-      console.log("解压完成",str);
+      // console.log("解压完成",str);
       let json_result = JSON.parse(str);
       if(json_result.ping){
         this.websocketsend(JSON.stringify({pong:json_result.ping}));
@@ -115,14 +120,12 @@ export default {
       if(json_result.id === "trade_sub1"){
           console.log("交易订阅成功");
       }
-      if(json_result.ch === "market.btcusdt.trade.detail"){
+      //如果是交易详情的回调
+      if(json_result.ch.includes("market.") && json_result.ch.includes(".trade.detail")){
         let direction = json_result.tick.data[0].direction;
         this.price = json_result.tick.data[0].price.toFixed(2);
-          console.log(direction === "buy" ? chalk.green(direction) : chalk.red(direction),json_result.tick.data[0].price);
+          // console.log(direction === "buy" ? chalk.green(direction) : chalk.red(direction),json_result.tick.data[0].price);
       }
-
-
-
     },
     websocketsend(Data) {//数据发送
       this.websock.send(Data);
@@ -154,7 +157,33 @@ export default {
         }
         a.readAsDataURL(blob_data);
       })
+    },
+    sub_trade_detail(symbol){
+      this.websocketsend(JSON.stringify({
+        sub: `market.${symbol}.trade.detail`,
+        id: `trade_sub_${symbol}`
+      }));
+      this.sub_list.push(symbol);
+
+      this.is_trade_sub = true;
+    },
+    unsub_trade_detail(symbol){
+      this.websocketsend(JSON.stringify({
+        sub: `market.${symbol}.trade.detail`,
+        id: `trade_sub_${symbol}`
+      }));
+      this.sub_list.push(symbol);
+
+      this.is_trade_sub = false;
+    },
+
+
+    //更换监听的币对
+    change_symbol(){
+
     }
+
+
 
   }
 }
