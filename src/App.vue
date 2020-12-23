@@ -31,6 +31,12 @@ export default {
 </script>
 
 <style>
+html,body{
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
 #app {
   user-select: none;
   width: 100%;
@@ -39,9 +45,9 @@ export default {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-  background-color: aqua;
-  border: 3px dashed mediumturquoise;
+  color: white;
+  /*margin-top: 60px;*/
+  background-color: #141826;
+  /*border: 3px dashed #00b464;*/
 }
 </style>

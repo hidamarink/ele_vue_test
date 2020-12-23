@@ -1,7 +1,6 @@
 <template>
   <div>
-    <h1>{{ msg }}</h1>
-    <div>当前价格:{{price}}</div>
+    <div >当前价格:<span class="price_green">{{price}}</span></div>
   </div>
 </template>
 
@@ -9,6 +8,9 @@
 import _ from "lodash";
 let electron = window.require("electron");
 let pako = require("pako");
+const  window_width = electron.remote.getCurrentWindow().getSize()[0];
+const  window_height = electron.remote.getCurrentWindow().getSize()[1];
+
 export default {
 
   name: "suspension",
@@ -64,7 +66,8 @@ export default {
 
     function moveEvent(e) {
       // console.log(e.screenX - biasX, e.screenY);
-      win.setBounds({width:400,height:300,x:e.screenX - biasX, y:e.screenY - biasY})
+      // console.log("==============",electron.remote.getCurrentWindow().getSize())
+      win.setBounds({width:window_width,height:window_height,x:e.screenX - biasX, y:e.screenY - biasY})
     }
 
     //添加监听事件
@@ -98,7 +101,7 @@ export default {
       // const redata = JSON.parse(e.data);
       // console.log(e);
       let str =  await this.gzip2str(e.data);
-      // console.log("解压完成",str);
+      console.log("解压完成",str);
       let json_result = JSON.parse(str);
       if(json_result.ping){
         this.websocketsend(JSON.stringify({pong:json_result.ping}));
@@ -120,8 +123,9 @@ export default {
       if(json_result.id === "trade_sub1"){
           console.log("交易订阅成功");
       }
+
       //如果是交易详情的回调
-      if(json_result.ch.includes("market.") && json_result.ch.includes(".trade.detail")){
+      if(json_result.ch && json_result.ch.includes("market.") && json_result.ch.includes(".trade.detail")){
         let direction = json_result.tick.data[0].direction;
         this.price = json_result.tick.data[0].price.toFixed(2);
           // console.log(direction === "buy" ? chalk.green(direction) : chalk.red(direction),json_result.tick.data[0].price);
@@ -132,7 +136,7 @@ export default {
     },
     websocketclose(e) {  //关闭
       console.log('断开连接', e);
-      //关闭之后10秒尝试重新连接
+      //TODO:关闭之后10秒尝试重新连接
 
     },
     async gzip2str(data){
@@ -158,6 +162,7 @@ export default {
         a.readAsDataURL(blob_data);
       })
     },
+
     sub_trade_detail(symbol){
       this.websocketsend(JSON.stringify({
         sub: `market.${symbol}.trade.detail`,
@@ -190,5 +195,7 @@ export default {
 </script>
 
 <style scoped>
-
+.price_green{
+  color: #00b464;
+}
 </style>
